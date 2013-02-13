@@ -2,12 +2,12 @@
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.ServiceProcess;
-using AC0KG.Minecraft.Host;
 using AC0KG.Utils;
 using AC0KG.Utils.Win32Svc;
 
-namespace AC0KG.MineShell
+namespace AC0KG.Minecraft.MineShell
 {
     // http://code.google.com/p/minecraft-service/
 
@@ -83,7 +83,8 @@ namespace AC0KG.MineShell
 
             return false;
         }
-        
+
+
         static void Main(string[] args)
         {
             ConfigUtil.ConfigureLogger(
@@ -105,16 +106,18 @@ namespace AC0KG.MineShell
                     Banner();
                     Console.WriteLine();
                     Console.WriteLine("Press enter to quit\n");
-                    MinecraftHost.instance.Start();
+
+                    RemoteShell.Start();
+
+                    // wait around.
                     Console.ReadLine();
-                    MinecraftHost.instance.Stop((a) => { Console.Write("."); });
-                    Console.WriteLine("Done");
-                    Console.ReadLine();
+
+                    RemoteShell.Stop((a) => { Console.Write("."); });
                 }
                 else
                 {
                     log.Info("Running as Windows service");
-                    var services = new ServiceBase[] { new AC0KG.Minecraft.ServiceShell.MinecraftService() };
+                    var services = new ServiceBase[] { new AC0KG.Minecraft.MineShell.MinecraftService() };
                     ServiceBase.Run(services);
                 }
             }

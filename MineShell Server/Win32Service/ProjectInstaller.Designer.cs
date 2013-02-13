@@ -1,4 +1,4 @@
-﻿namespace MineCraft_Server
+﻿namespace AC0KG.Minecraft.MineShell
 {
     partial class ProjectInstaller
     {

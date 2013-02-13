@@ -28,6 +28,11 @@ public class MinecraftScript
         var commands = new List<string>();
         var splitLine = line.Split(" ".ToCharArray());
        
+        // Help text may trigger certain commands.
+        // This is a bad hack, the 'line.Contains' tests should really be improved.
+        if (line.StartsWith("/")) 
+            return commands;
+
         //=======================================================
         if (line.Contains("logged in with entity id"))
         {

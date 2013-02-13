@@ -8,12 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using AC0KG.Utils;
 
-using System.Net.Sockets;
-using System.Net;
-
-namespace AC0KG.Minecraft.Host
+namespace AC0KG.Minecraft.MineShell
 {
-    public class MinecraftHost
+    public sealed class MinecraftHost
     {
         // simple singleton
         private MinecraftHost(){ }
@@ -24,7 +21,25 @@ namespace AC0KG.Minecraft.Host
         
         private Task workTask;
         private Process server;
+        private RingBuffer<string> consoleHist = new RingBuffer<string>(100);
+        public IEnumerable<string> ConsoleHistory
+        {
+            get { return consoleHist; }
+            private set { ; }
+        }
 
+        /// <summary>
+        /// Called when a new line has been received from the minecraft server
+        /// </summary>
+        public event EventHandler<EventArgs<string>> NewLine;
+
+        private void OnNewLine(string line)
+        {
+            var nle = NewLine;
+            if (nle != null)
+                nle(this, new EventArgs<string>(line));
+        }
+        
         /// <summary>
         /// Start the Minecraft server and set up the task that handles catching the output
         /// </summary>
@@ -105,10 +120,18 @@ namespace AC0KG.Minecraft.Host
             // log the text
             logcon.Info(line);
 
+            // Keep a history to display when a remote user connects
+            // todo: may need to keep track of the source of lines added to the buffer, so commands entered
+            // by remote users appear on all active remote consoles.
+            consoleHist.Add(line);
+            OnNewLine(line);
+
             try
             {
+                // process the line through the user script 
+                // and send any output back to the server
                 foreach (var s in ScriptHost.ProcessServerLine(line))
-                    Console.WriteLine(s);
+                    SendCommandText(s);
             }
             catch (Exception ex)
             {
@@ -116,85 +139,4 @@ namespace AC0KG.Minecraft.Host
             }
         }
     }
-
-/***********************************************************************
- 
-  Copyright (c) 2010 Alex Zaitsev
-  All rights reserved.
- 
-  Simple C# telnet server sample 
- 
-  You can use this code freely for any commercial or non-commercial
-  purpose. However if you use this code in your program, you should
-  add the string "Contains code by Alex Zaitsev, www.az3749.narod.ru"
-  in your copyright notice text.
- 
-***********************************************************************/
-    /*
- 
- 
-     class AsyncRedirect
-     {
-         readonly byte[] buf = new byte[4096];
-         readonly Stream r, w;
-         readonly AsyncCallback AsyncCallback_;
-         
-         public AsyncRedirect(Stream Read, Stream Write) 
-         { 
-             r = Read; 
-             w = Write; 
-             AsyncCallback_ = this.AsyncCallback; 
-         }
-         
-         void AsyncCallback(IAsyncResult ar)
-         {
-             if (!ar.IsCompleted) return;
-             int n = 0;
-         
-             try { n = r.EndRead(ar); }
-             catch (Exception e) {
-                  log.Info("EndRead failed:{0}", e);
-             }
-             
-             if (n > 0)+-+-
-             {
-                 w.Write(buf, 0, n);
-                 w.Flush();
-                 BeginRead();
-             }
-             else
-             {
-                 log.Info("read 0 bytes,finished");
-                 w.Close();
-             }
-         }
-         
-         public IAsyncResult BeginRead()
-         {
-             return r.BeginRead(buf, 0, buf.Length, AsyncCallback_, null);
-         }
-
-         static void Main(string[] args)
-         {
-             var psi = new ProcessStartInfo("cmd.exe");
-             psi.RedirectStandardInput = psi.RedirectStandardOutput = true;
-             psi.UseShellExecute = false;
-             
-             var tcpListener = new TcpListener(IPAddress.Any, 23);
-             tcpListener.Start();
-             while (true)
-             {
-                 var tcpClient = tcpListener.AcceptTcpClient();
-                 var clientStream = tcpClient.GetStream();
-                 
-                 var p = Process.Start(psi);
-         
-                 var Pro = new AsyncRedirect(p.StandardOutput.BaseStream, clientStream);
-                 var Tcp = new AsyncRedirect(clientStream, p.StandardInput.BaseStream);
-                 Pro.BeginRead();
-                 Tcp.BeginRead();
-             }
-         }
-
-     };*/
 }

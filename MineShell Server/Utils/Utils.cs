@@ -9,6 +9,21 @@ using log4net.Appender;
 
 namespace AC0KG.Utils
 {
+    public class EventArgs<T> : EventArgs
+    {
+        public EventArgs(T value)
+        {
+            m_value = value;
+        }
+
+        private T m_value;
+
+        public T Value
+        {
+            get { return m_value; }
+        }
+    }
+    
     public static class ConfigUtil
     {
         /// <summary>

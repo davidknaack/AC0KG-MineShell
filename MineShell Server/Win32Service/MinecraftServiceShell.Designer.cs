@@ -1,4 +1,4 @@
-﻿namespace AC0KG.Minecraft.ServiceShell
+﻿namespace AC0KG.Minecraft.MineShell
 {
     partial class MinecraftService
     {
