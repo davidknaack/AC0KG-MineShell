@@ -97,7 +97,7 @@ namespace AC0KG.Minecraft.MineShell
             tcpListener.Start();
             Task.Factory.StartNew(() =>
             {
-                log.Debug("Waiting for clients");
+                log.InfoFormat("Waiting for remote connections on {0}", tcpListener.LocalEndpoint);
                 while (!cte.Token.WaitHandle.WaitOne(100))
                 {
                     if (tcpListener.Pending())

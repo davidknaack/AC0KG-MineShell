@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AC0KG.Utils;
 
 namespace AC0KG.Minecraft.MineShell
 {
@@ -14,7 +15,30 @@ namespace AC0KG.Minecraft.MineShell
 
         static bool AuthFunc(string user, string pass, string host)
         {
-            if (user == "root" && pass == "munch")
+            var users = ConfigUtil.GetAppSetting("Remote Users").Split(",".ToCharArray());
+            var pwds = ConfigUtil.GetAppSetting("Remote User Passwords").Split(",".ToCharArray());
+            var authed = false;
+
+            if (users.Length != pwds.Length)
+            {
+                authed = false;
+                log.Info("Remote user count does not match password count, all access is denied. Fix the config settings.");
+            }
+            else if (users.Length == 0)
+            {
+                authed = true;
+                user = "<no user>";
+                log.Info("No remote users have been configured, access is unrestricted! Read the config file.");
+            } 
+            else 
+            {
+                var i = 0;
+                while ((i<users.Length) && !((users[i] == user) && (pwds[i] == pass)))
+                    i++;
+                authed = i != users.Length;
+            }
+
+            if (authed)
             {
                 var msg = string.Format("Remote auth success for user \"{0}\" from {1}", user, host);
                 log.Info(msg);
@@ -32,15 +56,18 @@ namespace AC0KG.Minecraft.MineShell
 
         public static void NewRemoteUser(object sender, RemoteTerminalUserConnectedArgs args)
         {
+            // Send the recent history to the user
             foreach (var l in MinecraftHost.instance.ConsoleHistory)
                 args.Writer.WriteLine(l);
         }
 
         public static void Start()
         {
+            log.Debug("Start MinecraftHost");
             MinecraftHost.instance.Start();
 
             // Set up the remote terminal server
+            log.Debug("Start RemoteTerminal");
             RemoteTerminal.Authenticator = AuthFunc;
             RemoteTerminal.NewUser += NewRemoteUser;
             RemoteTerminal.Start();
@@ -56,6 +83,7 @@ namespace AC0KG.Minecraft.MineShell
 
         public static void Stop(Action<int> requestMoreTime)
         {
+            log.Debug("Stop");
             RemoteTerminal.Broadcast("MineShell stopping");
             RemoteTerminal.Stop();
             MinecraftHost.instance.Stop(requestMoreTime);

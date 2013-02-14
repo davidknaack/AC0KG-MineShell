@@ -13,8 +13,14 @@ namespace AC0KG.Minecraft.MineShell
 
     static class Program
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("MineShell Main");
-        
+        private static readonly log4net.ILog log; // don't init before log is configured
+
+        static Program()
+        {
+            ConfigUtil.ConfigureLogger("", ConfigUtil.GetAppSetting("Log Dir"), "", "AC0KG MineShellLog.config");
+            log = log4net.LogManager.GetLogger("MineShell Main");
+        }
+
         private static void Banner()
         {
             var c = Console.ForegroundColor;
@@ -40,6 +46,7 @@ namespace AC0KG.Minecraft.MineShell
         {
             Console.WriteLine("AC0KG MineShell Minecraft service shell");
             Console.WriteLine("  Usage:");
+            Console.WriteLine("    -(c)onsole   : run as a console app on the desktop");
             Console.WriteLine("    -(i)nstall   : install service");
             Console.WriteLine("    -(u)ninstall : uninstall service");
         }
@@ -87,10 +94,6 @@ namespace AC0KG.Minecraft.MineShell
 
         static void Main(string[] args)
         {
-            ConfigUtil.ConfigureLogger(
-                "", ConfigUtil.GetAppSetting("Log Dir"), 
-                "", "MineShellLog.config");
-
             if (CheckInstallCmd(args))
                 return;
 

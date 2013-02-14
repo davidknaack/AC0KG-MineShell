@@ -34,14 +34,14 @@ namespace AC0KG
                 var fileName = ConfigUtil.GetAppSetting("Script File", "");
                 log.InfoFormat("Loading script file: {0}", fileName);
                 var code = File.ReadAllText(fileName);
-                log.InfoFormat("Compiling script, length: {0}", code.Length);
+                log.DebugFormat("Compiling script, length: {0}", code.Length);
                 script = CSScript.LoadCode(code);
 
-                log.Info("Getting method ProcessServerLine");
+                log.Debug("Getting method ProcessServerLine");
                 var p = script.GetStaticMethod("*.ProcessServerLine", "");
                 _ProcessServerLine = (l) => { return (List<string>)p(l); };
 
-                log.Info("Getting method SetOpsList");
+                log.Debug("Getting method SetOpsList");
                 var setOpsList = script.GetStaticMethod("*.SetOpsList", new List<string>());
                 _SetOpsList = (l) => { setOpsList(l); };
             }

@@ -6,6 +6,8 @@ namespace AC0KG.Minecraft.MineShell
 {
     public partial class MinecraftService : ServiceBase
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("MinecraftService");
+
         public MinecraftService()
         {
             InitializeComponent();
@@ -13,13 +15,13 @@ namespace AC0KG.Minecraft.MineShell
 
         protected override void OnStart(string[] args)
         {
-            eventlog.WriteEntry("Starting Minecraft server");
+            log.Info("Start");
             RemoteShell.Start();
         }
 
         protected override void OnStop()
         {
-            eventlog.WriteEntry("Stopping Minecraft server");
+            log.Info("Stop");
             RemoteShell.Stop((ms) => { this.RequestAdditionalTime(ms); });
         }
     }

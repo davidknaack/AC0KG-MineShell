@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using AC0KG.Utils;
+using System.Reflection;
 
 namespace AC0KG.Minecraft.MineShell
 {
@@ -45,7 +46,10 @@ namespace AC0KG.Minecraft.MineShell
         /// </summary>
         internal void Start()
         {
-            Environment.CurrentDirectory = Path.GetDirectoryName(Environment.GetCommandLineArgs()[0]);
+            // The current directory needs to be set to the location of the executable.
+            // When running as a service the current directory will likely be elsewhere.
+            var assemblyPath = Assembly.GetExecutingAssembly().Location;
+            Environment.CurrentDirectory = Path.GetDirectoryName(assemblyPath);
             server = LaunchServer();
             workTask = Task.Factory.StartNew(() =>
             {
@@ -118,7 +122,8 @@ namespace AC0KG.Minecraft.MineShell
             line = lineParts[lineParts.Length - 1];
 
             // log the text
-            logcon.Info(line);
+            if (ConfigUtil.GetAppSetting("Log console messages", "F") == "T")
+              logcon.Info(line);
 
             // Keep a history to display when a remote user connects
             // todo: may need to keep track of the source of lines added to the buffer, so commands entered

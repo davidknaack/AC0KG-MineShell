@@ -53,16 +53,17 @@ namespace AC0KG.Utils
         public static void ConfigureLogger(string exe = "", string logDir = "", string configDir = "", string configFileName = "log4net.config")
         {
             // Here's a couple of typical ways to call this
-            //  string exe = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+            //  string exe = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]); // may not contain path info
             //  string exe = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
             //  LogConfig.ConfigureLogger(exe);                
 
+            var assemblyPath = Assembly.GetExecutingAssembly().Location;
             if (string.IsNullOrEmpty(exe))
-                exe = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+                exe = Path.GetFileNameWithoutExtension(assemblyPath);
             if (string.IsNullOrEmpty(logDir))
-                logDir = Path.GetDirectoryName(exe);
+                logDir = Path.GetDirectoryName(assemblyPath);
             if (string.IsNullOrEmpty(configDir))
-                configDir = Path.GetDirectoryName(exe);
+                configDir = Path.GetDirectoryName(assemblyPath);
 
             log4net.Config.XmlConfigurator.Configure(new FileInfo(Path.Combine(configDir, configFileName)));
 
