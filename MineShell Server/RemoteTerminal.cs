@@ -76,9 +76,8 @@ namespace AC0KG.Minecraft.MineShell
             if (line == null)
                 return;
 
-            // Not sure why I'm getting nulls at the beginning of all but the first line.
-            // Possibly something to do with the client (putty), or just how tcp streams work.
-            // Whatever, can't have 'em there, so trim those off.
+            // Compliant Telnet clients will send a null after bare carrage returns,
+            // so trim those off if they are present.
             line = line.TrimStart(new[]{'\0'});
 
             if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(line))
