@@ -1,14 +1,28 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿/****************************************************************************
+*    Copyright 2013 David Knaack
+*    This file is part of AC0KG-MineShell
+*
+*    AC0KG-MineShell is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    AC0KG-MineShell is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with AC0KG-MineShell.  If not, see <http://www.gnu.org/licenses/>.
+****************************************************************************/
+using System;
 using System.ServiceProcess;
 using AC0KG.Utils;
 using AC0KG.Utils.Win32Svc;
 
 namespace AC0KG.Minecraft.MineShell
 {
+    // This project started as a fork of minecraft-service, which can be found at:
     // http://code.google.com/p/minecraft-service/
 
     static class Program

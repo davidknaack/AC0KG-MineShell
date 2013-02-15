@@ -1,14 +1,31 @@
-﻿using System;
+﻿/****************************************************************************
+*    Copyright 2013 David Knaack
+*    This file is part of AC0KG-MineShell
+*
+*    AC0KG-MineShell is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    AC0KG-MineShell is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with AC0KG-MineShell.  If not, see <http://www.gnu.org/licenses/>.
+****************************************************************************/
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections;
 using System.Diagnostics;
 
 namespace AC0KG.Utils
 {
     // Obtained from : http://florianreischl.blogspot.com/2010/01/generic-c-ringbuffer.html
-
+    // According to the author,  Florian Reischl, on February 14, 2012 at 1:50 AM:
+    //   No special licenses. You can use it for whatever you want. For sure, no guarantees too.
+    // Thus I claim use under Public Domain and republish under GPL.
 
     /// <summary>
     /// Represents a fixted length ring buffer to store a specified maximal count of items within.
