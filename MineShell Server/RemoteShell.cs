@@ -29,6 +29,8 @@ namespace AC0KG.Minecraft.MineShell
 
         static bool AuthFunc(string user, string pass, string host)
         {
+            log.DebugFormat("AuthFunc: {0}", user);
+
             var users = ConfigUtil.GetAppSetting("Remote Users").Split(",".ToCharArray());
             var pwds = ConfigUtil.GetAppSetting("Remote User Passwords").Split(",".ToCharArray());
             var authed = false;
@@ -70,6 +72,8 @@ namespace AC0KG.Minecraft.MineShell
 
         public static void NewRemoteUser(object sender, RemoteTerminalUserConnectedArgs args)
         {
+            log.DebugFormat("NewRemoteUser: {0}", args.User);
+
             // Send the recent history to the user
             foreach (var l in MinecraftHost.instance.ConsoleHistory)
                 args.Writer.WriteLine(l);

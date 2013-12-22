@@ -73,8 +73,13 @@ namespace AC0KG.Minecraft.MineShell
 
         private static void OnNewLine(string user, string line)
         {
+            log.DebugFormat("OnNewLine: {0}:{1}", user, line);
+
             if (line == null)
+            {
+                log.WarnFormat("Received null from {0}", user);
                 return;
+            }
 
             // Compliant Telnet clients will send a null after bare carrage returns,
             // so trim those off if they are present.
@@ -90,6 +95,8 @@ namespace AC0KG.Minecraft.MineShell
 
         private static void OnNewUser(string user, StreamWriter writer)
         {
+            log.DebugFormat("OnNewUser: {0}", user);
+
             var nue = NewUser;
             if (nue != null)
                 nue(null, new RemoteTerminalUserConnectedArgs(user, writer));
@@ -97,11 +104,13 @@ namespace AC0KG.Minecraft.MineShell
         
         public static void Stop()
         {
+            log.DebugFormat("Stop");
             cte.Cancel();
         }
 
         public static void Start()
-        {          
+        {
+            log.DebugFormat("Start");
             int iport;
             var sport = ConfigUtil.GetAppSetting("Remote Console Port");
             if (!int.TryParse(sport, out iport))
@@ -131,13 +140,22 @@ namespace AC0KG.Minecraft.MineShell
         /// <param name="line"></param>
         public static void Broadcast(string line)
         {
-            foreach (var client in RemoteTerminal.clientWriters)
-                try
-                {
-                    client.WriteLine(line);
-                }
-                catch
-                { }
+            log.DebugFormat("Broadcast: {0}", line);
+
+            try
+            {
+                foreach (var client in RemoteTerminal.clientWriters.ToArray())
+                    try
+                    {
+                        client.WriteLine(line);
+                    }
+                    catch
+                    { }
+            }
+            catch (Exception e)
+            {
+                log.Error(e);
+            }
         }
 
         private static void ClientHandler(TcpClient tcpClient)
@@ -147,57 +165,69 @@ namespace AC0KG.Minecraft.MineShell
                 log.Debug("Remote client connected");
 
                 var clientStream = tcpClient.GetStream();
-                var reader = new StreamReader(clientStream);
-                var writer = new StreamWriter(clientStream);
-                writer.AutoFlush = true;
-
-                // this authentication portion could all be broken out 
-                // into a separate module, but this is good enough for now.
-                writer.Write("user:");
-                var user = reader.ReadLine();
-                writer.Write("\r\npass:");
-                var pass = reader.ReadLine().TrimStart("\0".ToCharArray());
-                var rHost = tcpClient.Client.RemoteEndPoint.ToString();
-
-                string msg;
-                if (Authenticator != null)
-                    if (Authenticator(user, pass, rHost))
-                        writer.WriteLine("Authenticated as " + user);
-                    else
-                    {
-                        writer.WriteLine("Authentication failed");
-                        Thread.Sleep(2000); // some clients will close the window straight away, so for usability, give it a moment before disconnect.
-                        tcpClient.Close();
-                        return;
-                    }
-
-                clientWriters.Add(writer);
-
-                OnNewUser(user, writer);
-
-                while (tcpClient.Connected)
+                using (var reader = new StreamReader(clientStream))
+                using (var writer = new StreamWriter(clientStream))
                 {
+                    writer.AutoFlush = true;
+
+                    // this authentication portion could all be broken out 
+                    // into a separate module, but this is good enough for now.
+                    writer.Write("user:");
+                    var user = reader.ReadLine();
+                    writer.Write("\r\npass:");
+                    var pass = reader.ReadLine().TrimStart("\0".ToCharArray());
+                    var rHost = tcpClient.Client.RemoteEndPoint.ToString();
+
+                    string msg;
+                    if (Authenticator != null)
+                        if (Authenticator(user, pass, rHost))
+                            writer.WriteLine("Authenticated as " + user);
+                        else
+                        {
+                            writer.WriteLine("Authentication failed");
+                            Thread.Sleep(2000); // some clients will close the window straight away, so for usability, give it a moment before disconnect.
+                            tcpClient.Close();
+                            return;
+                        }
+
+                    clientWriters.Add(writer);
                     try
                     {
-                        OnNewLine(string.Format("{0}@{1}", user, rHost), reader.ReadLine());
+
+                        OnNewUser(user, writer);
+
+                        while (true)
+                        {
+                            try
+                            {
+                                var line = reader.ReadLine();
+                                if (line == null)
+                                    break;
+                                else
+                                    OnNewLine(string.Format("{0}@{1}", user, rHost), line);
+                            }
+                            catch (IOException e)
+                            {
+                                break;
+                            }
+                        }
                     }
-                    catch ( IOException )
+                    finally
                     {
-                        log.Debug("socket closed?");
-                        break;
+                        clientWriters.Remove(writer);
                     }
+
+                    log.Info(msg=string.Format("Remote user disconnected \"{0}@{1}\"", user, rHost));
+                    Broadcast(msg);
                 }
-
-                clientWriters.Remove(writer);
-                tcpClient.Close();
-
-                msg = string.Format("Remote user disconneted \"{0}@{1}\"", user, rHost);
-                log.Info(msg);
-                Broadcast(msg);
             }
             catch (Exception ex)
             {
                 log.Error(ex);
+            }
+            finally
+            {
+                tcpClient.Close();
             }
         }
     }
