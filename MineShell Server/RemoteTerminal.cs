@@ -140,6 +140,7 @@ namespace AC0KG.Minecraft.MineShell
         /// <param name="line"></param>
         public static void Broadcast(string line)
         {
+            line = string.Format("{0} {1}", DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"), line);
             log.DebugFormat("Broadcast: {0}", line);
 
             try
@@ -165,10 +166,14 @@ namespace AC0KG.Minecraft.MineShell
                 log.Debug("Remote client connected");
 
                 var clientStream = tcpClient.GetStream();
-                using (var reader = new StreamReader(clientStream))
+                using (var reader = new StreamReader(clientStream, System.Text.Encoding.ASCII))
                 using (var writer = new StreamWriter(clientStream))
                 {
                     writer.AutoFlush = true;
+
+                    // flush anything the client sent. Telnet sends setup data, ignore it.
+                    while (reader.Peek() > -1)
+                        reader.Read();
 
                     // this authentication portion could all be broken out 
                     // into a separate module, but this is good enough for now.
