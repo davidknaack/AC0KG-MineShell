@@ -18,13 +18,24 @@
 using System;
 using System.ServiceProcess;
 using AC0KG.Utils;
-using AC0KG.Utils.Win32Svc;
+using System.ComponentModel;
+using AC0KG.WindowsService;
+
+
 
 namespace AC0KG.Minecraft.MineShell
 {
     // This project started as a fork of minecraft-service, which can be found at:
     // http://code.google.com/p/minecraft-service/
 
+    [System.ComponentModel.DesignerCategory("")]
+    [ServiceName("MinecraftServer")]
+    class Service : ServiceShell { }
+
+    [RunInstaller(true)]
+    [ServiceName("MinecraftServer", DisplayName = "Minecraft Server", Description = "Service shell for Minecraft server")]
+    public class Installer : InstallerShell { }
+    
     static class Program
     {
         private static readonly log4net.ILog log; // don't init before log is configured
@@ -65,50 +76,9 @@ namespace AC0KG.Minecraft.MineShell
             Console.WriteLine("    -(u)ninstall : uninstall service");
         }
         
-        /// <summary>
-        /// Check the command line for install/uninstall command, or unrecognized commands.
-        /// </summary>
-        /// <param name="args">Command line arguments</param>
-        /// <returns>True if anything is recognized as a parameter</returns>
-        static bool CheckInstallCmd(string[] args)
-        {
-            // ghetto command-line processing
-            if ((args != null)
-                && (args.Length == 1)
-                && (args[0].Length > 1)
-                && (args[0][0] == '-' || args[0][0] == '/'))
-            {
-                switch (args[0].Substring(1).ToLower())
-                {
-                    default:
-                        Usage();
-                        return true;
-
-                    case "console":
-                    case "c":
-                        return false;
-
-                    case "install":
-                    case "i":
-                        log.Info("Service Install");
-                        ServiceSelfInstaller.Install();
-                        return true;
-
-                    case "uninstall":
-                    case "u":
-                        log.Info("Service Uninstall");
-                        ServiceSelfInstaller.Uninstall();
-                        return true;
-                }
-            }
-
-            return false;
-        }
-
-
         static void Main(string[] args)
         {
-            if (CheckInstallCmd(args))
+            if (ServiceShell.ProcessInstallOptions(args))
                 return;
 
             try
@@ -121,22 +91,12 @@ namespace AC0KG.Minecraft.MineShell
 
                     log.Info("Running as console service");
                     Banner();
-                    Console.WriteLine();
-                    Console.WriteLine("Press enter to quit\n");
-
-                    RemoteShell.Start();
-
-                    // wait around.
-                    Console.ReadLine();
-
-                    RemoteShell.Stop((a) => { Console.Write("."); });
                 }
-                else
-                {
-                    log.Info("Running as Windows service");
-                    var services = new ServiceBase[] { new AC0KG.Minecraft.MineShell.MinecraftService() };
-                    ServiceBase.Run(services);
-                }
+
+                Service.StartService<Service>(
+                    RemoteShell.Start,
+                    () => RemoteShell.Stop((a) => { Console.Write("."); }),
+                    Environment.UserInteractive);
             }
             catch (Exception ex)
             {
